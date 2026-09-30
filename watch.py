@@ -21,6 +21,8 @@ from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 SCHOOL_ID = "zse-bydgoszcz"
 SUBS_URL = "https://zastepstwa.zse.bydgoszcz.pl/index.html"
@@ -29,7 +31,51 @@ RSS_URLS = [
     ("rss_latest", "https://zse.bydgoszcz.pl/rsslatest.xml"),
 ]
 STATE_PATH = Path(__file__).parent / "state.json"
-USER_AGENT = "eLektron-push-watcher/0.1 (+https://gitlab.com/stasolejnik/atomik)"
+USER_AGENT = "eLektron-push-watcher/0.2 (+https://github.com/stasolejnik/elektron-push-watcher)"
+
+# (połączenie, odczyt) w sekundach. Serwer szkoły bywa chwilowo nieosiągalny z maszyn
+# GitHuba - lepiej szybko ponowić niż czekać, bo przebieg i tak powtórzy się za 5 min.
+TIMEOUT = (10, 30)
+
+
+class SourceUnavailable(Exception):
+    """Strona szkoły nie odpowiedziała (sieć, timeout, 5xx). To nie jest błąd watchera."""
+
+
+def _make_session() -> requests.Session:
+    session = requests.Session()
+    retry = Retry(
+        total=3, connect=3, read=2, status=3,
+        backoff_factor=2,  # 0 s, 4 s, 8 s
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset({"GET"}),
+    )
+    session.mount("https://", HTTPAdapter(max_retries=retry))
+    session.headers["User-Agent"] = USER_AGENT
+    return session
+
+
+SESSION = _make_session()
+
+
+def http_get(url: str) -> requests.Response:
+    try:
+        resp = SESSION.get(url, timeout=TIMEOUT)
+        resp.raise_for_status()
+        return resp
+    except (requests.ConnectionError, requests.Timeout) as e:
+        raise SourceUnavailable(f"{url}: brak połączenia ({type(e).__name__})") from e
+    except requests.HTTPError as e:
+        code = e.response.status_code if e.response is not None else 0
+        if code >= 500 or code == 429:
+            raise SourceUnavailable(f"{url}: serwer zwrócił {code}") from e
+        raise
+
+
+def warn(msg: str) -> None:
+    """Ostrzeżenie widoczne w podsumowaniu przebiegu GitHub Actions (bez maila o błędzie)."""
+    print(f"::warning::{msg}")
+
 
 DATE_RE = re.compile(r"Zastępstwa w dniu\s+(\d{2}\.\d{2}\.\d{4})")
 DESC_RE = re.compile(r"^(\d+)\s*([A-Z])(?:\((\d+)\))?\s*-\s*(.+)$")
@@ -55,51 +101,58 @@ def substitution_id(date_obj: date, original_teacher: str, lesson_number: int,
 
 
 def fetch_substitutions() -> list[dict]:
-    resp = requests.get(SUBS_URL, headers={"User-Agent": USER_AGENT}, timeout=20)
-    resp.raise_for_status()
+    resp = http_get(SUBS_URL)
     html = resp.content.decode("iso-8859-2", errors="replace")
     soup = BeautifulSoup(html, "html.parser")
     tables = soup.find_all("table")
     if not tables:
         print("Brak <table> w dokumencie zastępstw", file=sys.stderr)
         return []
-    table = tables[0]
 
+    # WAŻNE: klasy CSS (st0, st7, st14...) Optivum numeruje od nowa przy każdym eksporcie -
+    # zmieniają się z dnia na dzień. Dawniej wiersze rozpoznawane po "st7"/"st10" - 30.09.2026
+    # z 32 zastępstw odczytane zostało 1. Teraz wyłącznie struktura tabeli (jak w aplikacji):
+    #  - 1 komórka + "Zastępstwa w dniu dd.mm.rrrr" -> data,
+    #  - 1 komórka tuż przed nagłówkami kolumn (albo tuż przed pierwszym wpisem) -> nauczyciel,
+    #  - 4 komórki, pierwsza to numer lekcji -> wpis; puste wiersze pomijane.
     out = []
     current_date_raw = None
     current_teacher = None
+    candidate_teacher = None
 
-    for row in table.find_all("tr"):
-        cells = row.find_all("td")
+    for row in (tr for t in tables for tr in t.find_all("tr")):
+        cells = row.find_all(["td", "th"], recursive=False)
         if not cells:
             continue
+        texts = [c.get_text(strip=True) for c in cells]
 
         if len(cells) == 1:
-            cls = (cells[0].get("class") or [])
-            text = cells[0].get_text(strip=True)
-            if "st0" in cls:
-                m = DATE_RE.search(text)
-                if m:
-                    current_date_raw = m.group(1)
-            elif "st1" in cls:
-                current_teacher = text or None
+            m = DATE_RE.search(texts[0])
+            if m:
+                current_date_raw = m.group(1)
+                current_teacher = None
+                candidate_teacher = None
+            elif texts[0]:
+                candidate_teacher = texts[0]
             continue
 
         if len(cells) != 4:
             continue
-
-        texts = [c.get_text(strip=True) for c in cells]
-        if {t.lower() for t in texts} == {"lekcja", "opis", "zastępca", "uwagi"}:
+        if not any(texts):
             continue
-
-        first_cls = set(cells[0].get("class") or [])
-        if "st7" not in first_cls and "st10" not in first_cls:
+        if {t.lower() for t in texts} == {"lekcja", "opis", "zastępca", "uwagi"}:
+            current_teacher = candidate_teacher
+            candidate_teacher = None
             continue
 
         try:
             lesson_no = int(texts[0])
         except ValueError:
             continue
+        # Blok nauczyciela bez wiersza nagłówków kolumn - nazwisko tuż nad wpisem.
+        if candidate_teacher is not None:
+            current_teacher = candidate_teacher
+            candidate_teacher = None
         if not (0 <= lesson_no <= 12):
             continue
         if current_date_raw is None or current_teacher is None:
@@ -137,11 +190,17 @@ def strip_html(s: str) -> str:
     return re.sub(r"<[^>]+>", "", s or "").strip()
 
 
-def fetch_announcements() -> list[dict]:
+def fetch_announcements() -> tuple[list[dict], bool]:
+    """Zwraca (ogłoszenia, czy_wszystkie_kanały_pobrane). Niedostępny kanał jest pomijany."""
     out = []
+    complete = True
     for source, url in RSS_URLS:
-        resp = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=20)
-        resp.raise_for_status()
+        try:
+            resp = http_get(url)
+        except SourceUnavailable as e:
+            warn(f"Pominięto kanał RSS - {e}")
+            complete = False
+            continue
         soup = BeautifulSoup(resp.content, "xml")
         for item in soup.find_all("item"):
             guid_tag = item.find("guid")
@@ -170,7 +229,7 @@ def fetch_announcements() -> list[dict]:
                 "source": "RSS_NEWS" if source == "rss_news" else "RSS_LATEST",
             })
     print(f"Sparsowano {len(out)} ogłoszeń RSS")
-    return out
+    return out, complete
 
 
 def parse_pubdate(raw: str) -> str:
@@ -203,11 +262,15 @@ def send_fcm(topic: str, data: dict, project_id: str, access_token: str) -> None
             "data": {k: str(v) for k, v in data.items() if v is not None},
         }
     }
-    resp = requests.post(
-        url,
-        headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
-        json=payload, timeout=20,
-    )
+    try:
+        resp = requests.post(
+            url,
+            headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+            json=payload, timeout=20,
+        )
+    except (requests.ConnectionError, requests.Timeout) as e:
+        warn(f"FCM: nie wysłano powiadomienia ({type(e).__name__})")
+        return
     if not resp.ok:
         print(f"FCM send błąd ({resp.status_code}): {resp.text}", file=sys.stderr)
 
@@ -234,11 +297,23 @@ def main() -> None:
     seen_subs = set(state.get("seen_subs", []))
     seen_anns = set(state.get("seen_anns", []))
 
-    subs = fetch_substitutions()
-    anns = fetch_announcements()
+    # Każde źródło osobno: awaria jednego nie blokuje drugiego. Jeśli źródło nie odpowiedziało,
+    # jego część stanu zostaje bez zmian - inaczej następny udany przebieg uznałby wszystkie
+    # zastępstwa/ogłoszenia za nowe i rozesłał je ponownie.
+    try:
+        subs = fetch_substitutions()
+    except SourceUnavailable as e:
+        warn(f"Zastępstwa niedostępne - {e}")
+        subs = None
+    anns, anns_complete = fetch_announcements()
 
-    fresh_subs = [s for s in subs if s["id"] not in seen_subs]
-    fresh_anns = [a for a in anns if a["id"] not in seen_anns]
+    if subs is None and not anns and not anns_complete:
+        warn("Strony szkoły nie odpowiadają - spróbuję w następnym przebiegu.")
+        return
+
+    fresh_subs = [s for s in (subs or []) if s["id"] not in seen_subs]
+    # To samo ogłoszenie bywa w obu kanałach RSS - jedno powiadomienie na wpis.
+    fresh_anns = list({a["id"]: a for a in anns if a["id"] not in seen_anns}.values())
 
     print(f"Nowych zastępstw: {len(fresh_subs)}, nowych ogłoszeń: {len(fresh_anns)}")
 
@@ -247,7 +322,12 @@ def main() -> None:
     is_first_run = not state.get("seen_subs") and not state.get("seen_anns")
 
     if (fresh_subs or fresh_anns) and not is_first_run:
-        token, project_id = get_access_token(sa_json)
+        try:
+            token, project_id = get_access_token(sa_json)
+        except (requests.ConnectionError, requests.Timeout, OSError) as e:
+            # Stan nie jest zapisywany - te same nowości zostaną wysłane w następnym przebiegu.
+            warn(f"Brak połączenia z Google (token FCM): {type(e).__name__} - ponowię za chwilę.")
+            return
         for s in fresh_subs:
             payload = dict(s)
             payload["type"] = "substitution"
@@ -257,10 +337,12 @@ def main() -> None:
             payload["type"] = "announcement"
             send_fcm(f"elektron-anns-{SCHOOL_ID}", payload, project_id, token)
 
-    state["seen_subs"] = list({s["id"] for s in subs})
-    state["seen_anns"] = list({a["id"] for a in anns})
+    if subs is not None:
+        state["seen_subs"] = sorted({s["id"] for s in subs})
+    # Pełny odczyt RSS = lista jest aktualna (stare wpisy wypadają). Częściowy = tylko dopisujemy.
+    anns_ids = {a["id"] for a in anns}
+    state["seen_anns"] = sorted(anns_ids if anns_complete else seen_anns | anns_ids)
     save_state(state)
-
 
 if __name__ == "__main__":
     main()
