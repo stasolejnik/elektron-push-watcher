@@ -1,16 +1,17 @@
 name: eLektron push watcher
 
 on:
+  # Główny zegar: cron-job.org wywołuje workflow_dispatch co 5 min (patrz README).
+  # Harmonogram GitHuba zostaje jako zapas - sam w praktyce odpala co 15-25 min.
   schedule:
-    # GitHub nie gwarantuje dokładności co do minuty przy dużym obciążeniu — w praktyce
-    # zwykle +/- kilka minut. To i tak lepsze niż 15-minutowy polling appki.
     - cron: "*/5 * * * *"
-  workflow_dispatch: {} # pozwala odpalić ręcznie z zakładki Actions, do testów
+  workflow_dispatch: {}
 
 # Watcher commituje z powrotem zaktualizowany state.json — potrzebne uprawnienie do zapisu.
 permissions:
   contents: write
 
+# Jeden przebieg naraz; kolejne czekają (nie są przerywane w połowie wysyłania pushy).
 concurrency:
   group: elektron-push-watcher
   cancel-in-progress: false
@@ -18,12 +19,20 @@ concurrency:
 jobs:
   watch:
     runs-on: ubuntu-latest
+    # Zawieszony przebieg nie może blokować kolejki na 6 godzin (domyślny limit GitHuba).
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      # ref: main - NAJNOWSZY stan gałęzi w chwili startu. Bez tego przebieg czekający
+      # w kolejce dostawał commit z chwili wywołania, czyli state.json sprzed poprzedniego
+      # przebiegu -> te same pushe wysłane drugi raz i odrzucony zapis stanu.
+      - uses: actions/checkout@v5
+        with:
+          ref: main
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+          cache: pip
 
       - run: pip install -r requirements.txt
 
@@ -39,7 +48,24 @@ jobs:
           if ! git diff --quiet -- state.json; then
             git add state.json
             git commit -m "chore: aktualizacja stanu watchera [skip ci]"
-            git push
+            # Zabezpieczenie, gdyby w międzyczasie ktoś wypchnął zmianę (np. Ty z komputera).
+            git push || { git pull --rebase && git push; }
           else
             echo "Brak zmian w state.json"
+          fi
+
+      # GitHub wyłącza zaplanowane workflowy po 60 dniach bez aktywności w repozytorium.
+      # Watcher commituje tylko przy zmianach na stronie szkoły (w wakacje może ich nie być),
+      # więc po 25 dniach ciszy zapisujemy heartbeat.txt, żeby harmonogram nie wygasł.
+      - name: Heartbeat (ochrona przed wyłączeniem harmonogramu)
+        run: |
+          last=$(git log -1 --format=%ct)
+          now=$(date +%s)
+          if [ $(( (now - last) / 86400 )) -ge 25 ]; then
+            date -u +"%Y-%m-%dT%H:%M:%SZ" > heartbeat.txt
+            git add heartbeat.txt
+            git commit -m "chore: heartbeat [skip ci]"
+            git push || { git pull --rebase && git push; }
+          else
+            echo "Ostatni commit $(( (now - last) / 86400 )) dni temu - heartbeat niepotrzebny"
           fi
