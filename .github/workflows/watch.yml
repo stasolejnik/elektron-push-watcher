@@ -41,12 +41,13 @@ jobs:
           FCM_SERVICE_ACCOUNT_JSON: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
         run: python watch.py
 
-      - name: Zacommituj zaktualizowany stan
+      - name: Zacommituj zaktualizowany stan i archiwum
         run: |
           git config user.name "elektron-push-watcher"
           git config user.email "actions@users.noreply.github.com"
-          if ! git diff --quiet -- state.json; then
-            git add state.json
+          # state.json + nowe strony zastępstw w archiwum/ (tylko gdy szkoła zmieniła stronę)
+          if [ -n "$(git status --porcelain -- state.json archiwum)" ]; then
+            git add state.json archiwum
             git commit -m "chore: aktualizacja stanu watchera [skip ci]"
             # Zabezpieczenie, gdyby w międzyczasie ktoś wypchnął zmianę (np. Ty z komputera).
             git push || { git pull --rebase && git push; }

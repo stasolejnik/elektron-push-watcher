@@ -100,8 +100,33 @@ def substitution_id(date_obj: date, original_teacher: str, lesson_number: int,
     return f"{epoch_day(date_obj)}|{original_teacher}|{lesson_number}|{class_short}|{group}|{room_hash}"
 
 
+ARCHIVE_DIR = Path(__file__).parent / "archiwum" / "zastepstwa"
+
+
+def archive_page(raw: bytes) -> None:
+    """Zapisuje stronę zastępstw do archiwum/zastepstwa/, gdy szkoła ją zmieniła (po sumie
+    SHA-256). Archiwum służy do testów parsera na prawdziwych stronach z wielu dni (1.0).
+    Błąd zapisu nigdy nie przerywa wysyłania pushy."""
+    try:
+        import hashlib
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        digest = hashlib.sha256(raw).hexdigest()
+        last_file = ARCHIVE_DIR / ".ostatni-sha256"
+        if last_file.exists() and last_file.read_text().strip() == digest:
+            return
+        ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y-%m-%d_%H%M%S")
+        (ARCHIVE_DIR / f"{stamp}.html").write_bytes(raw)   # oryginalne bajty (ISO-8859-2)
+        last_file.write_text(digest + "\n")
+        print(f"Archiwum: zapisano {stamp}.html")
+    except Exception as e:  # noqa: BLE001 - archiwum jest dodatkiem
+        print(f"::warning::Archiwum stron zastępstw: {e}")
+
+
 def fetch_substitutions() -> list[dict]:
     resp = http_get(SUBS_URL)
+    archive_page(resp.content)
     html = resp.content.decode("iso-8859-2", errors="replace")
     soup = BeautifulSoup(html, "html.parser")
     tables = soup.find_all("table")
