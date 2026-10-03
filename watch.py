@@ -278,7 +278,8 @@ def save_state(state: dict) -> None:
     STATE_PATH.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def send_fcm(topic: str, data: dict, project_id: str, access_token: str) -> None:
+def send_fcm(topic: str, data: dict, project_id: str, access_token: str) -> bool:
+    """Wysyła push na temat FCM. True - FCM przyjął wiadomość; False - nie udało się."""
     url = f"https://fcm.googleapis.com/v1/projects/{project_id}/messages:send"
     payload = {
         "message": {
@@ -295,9 +296,40 @@ def send_fcm(topic: str, data: dict, project_id: str, access_token: str) -> None
         )
     except (requests.ConnectionError, requests.Timeout) as e:
         warn(f"FCM: nie wysłano powiadomienia ({type(e).__name__})")
-        return
+        return False
     if not resp.ok:
         print(f"FCM send błąd ({resp.status_code}): {resp.text}", file=sys.stderr)
+        return False
+    return True
+
+
+# Ile przebiegów z rzędu ponawiamy wysłanie tego samego wpisu, zanim go pominiemy
+# (jeden uszkodzony wpis, np. odrzucany przez FCM, nie może blokować kolejki na zawsze).
+MAX_SEND_ATTEMPTS = 3
+
+
+def send_fresh(items: list[dict], kind: str, topic: str, failures: dict,
+               project_id: str, token: str) -> set[str]:
+    """
+    Wysyła nowe wpisy. Zwraca ID, które NIE trafiają jeszcze do "widzianych" (nieudane,
+    do ponowienia w następnym przebiegu). [failures] (id -> liczba nieudanych prób)
+    jest aktualizowane w miejscu; po MAX_SEND_ATTEMPTS wpis jest pomijany na stałe.
+    """
+    retry = set()
+    for item in items:
+        payload = dict(item)
+        payload["type"] = kind
+        if send_fcm(topic, payload, project_id, token):
+            failures.pop(item["id"], None)
+            continue
+        attempts = failures.get(item["id"], 0) + 1
+        if attempts >= MAX_SEND_ATTEMPTS:
+            warn(f"FCM: pomijam {kind} {item['id']} po {attempts} nieudanych próbach")
+            failures.pop(item["id"], None)
+        else:
+            failures[item["id"]] = attempts
+            retry.add(item["id"])
+    return retry
 
 
 def get_access_token(service_account_json: str) -> tuple[str, str]:
@@ -321,6 +353,9 @@ def main() -> None:
     state = load_state()
     seen_subs = set(state.get("seen_subs", []))
     seen_anns = set(state.get("seen_anns", []))
+    # ID -> liczba nieudanych prób wysłania (patrz send_fresh).
+    failed_subs = dict(state.get("failed_subs", {}))
+    failed_anns = dict(state.get("failed_anns", {}))
 
     # Każde źródło osobno: awaria jednego nie blokuje drugiego. Jeśli źródło nie odpowiedziało,
     # jego część stanu zostaje bez zmian - inaczej następny udany przebieg uznałby wszystkie
@@ -344,7 +379,10 @@ def main() -> None:
 
     # Pierwsze uruchomienie (pusty state.json) — nie zalewamy pushami całej historii,
     # tylko zapisujemy snapshot. Dokładnie ta sama zasada co initial_sync_done w appce.
-    is_first_run = not state.get("seen_subs") and not state.get("seen_anns")
+    # Liczniki nieudanych prób też się liczą: gdy WSZYSTKIE nowości się nie wysłały, listy
+    # "widzianych" mogą być puste - to nie jest pierwsze uruchomienie.
+    is_first_run = (not state.get("seen_subs") and not state.get("seen_anns")
+                    and not failed_subs and not failed_anns)
 
     if (fresh_subs or fresh_anns) and not is_first_run:
         try:
@@ -353,20 +391,27 @@ def main() -> None:
             # Stan nie jest zapisywany - te same nowości zostaną wysłane w następnym przebiegu.
             warn(f"Brak połączenia z Google (token FCM): {type(e).__name__} - ponowię za chwilę.")
             return
-        for s in fresh_subs:
-            payload = dict(s)
-            payload["type"] = "substitution"
-            send_fcm(f"elektron-subs-{SCHOOL_ID}", payload, project_id, token)
-        for a in fresh_anns:
-            payload = dict(a)
-            payload["type"] = "announcement"
-            send_fcm(f"elektron-anns-{SCHOOL_ID}", payload, project_id, token)
+        # Do "widzianych" trafia wpis dopiero po udanym wysłaniu. Dawniej stan zapisywał się
+        # zawsze, więc push, którego FCM nie przyjął, przepadał na zawsze.
+        retry_subs = send_fresh(fresh_subs, "substitution", f"elektron-subs-{SCHOOL_ID}",
+                                failed_subs, project_id, token)
+        retry_anns = send_fresh(fresh_anns, "announcement", f"elektron-anns-{SCHOOL_ID}",
+                                failed_anns, project_id, token)
+    else:
+        retry_subs, retry_anns = set(), set()
 
     if subs is not None:
-        state["seen_subs"] = sorted({s["id"] for s in subs})
+        current_subs = {s["id"] for s in subs}
+        state["seen_subs"] = sorted(current_subs - retry_subs)
+        # Liczniki prób tylko dla wpisów wciąż obecnych na stronie.
+        failed_subs = {k: v for k, v in failed_subs.items() if k in current_subs}
     # Pełny odczyt RSS = lista jest aktualna (stare wpisy wypadają). Częściowy = tylko dopisujemy.
     anns_ids = {a["id"] for a in anns}
-    state["seen_anns"] = sorted(anns_ids if anns_complete else seen_anns | anns_ids)
+    state["seen_anns"] = sorted((anns_ids if anns_complete else seen_anns | anns_ids) - retry_anns)
+    if anns_complete:
+        failed_anns = {k: v for k, v in failed_anns.items() if k in anns_ids}
+    state["failed_subs"] = failed_subs
+    state["failed_anns"] = failed_anns
     save_state(state)
 
 if __name__ == "__main__":
