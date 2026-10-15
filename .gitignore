@@ -1,0 +1,21 @@
+# Klucz konta usługi Firebase trafia tylko do sekretu FCM_SERVICE_ACCOUNT_JSON w GitHub Actions.
+*service-account*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Edytory i system
+.idea/
+.vscode/
+.DS_Store
+.directory
+Thumbs.db
+*~
