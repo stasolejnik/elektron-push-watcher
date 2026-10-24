@@ -124,11 +124,83 @@ def archive_page(raw: bytes) -> None:
         print(f"::warning::Archiwum stron zastępstw: {e}")
 
 
+# Ostatnio pobrana strona zastępstw - fetch_notices() czyta z niej informacje szkoły bez drugiego pobrania.
+_last_subs_soup = None
+
+# Jak ZastepstwaParser.isPublicationLine w aplikacji: cała linia to znacznik publikacji, nie treść.
+PUBLICATION_RE = re.compile(
+    r"^(publikacja|opublikowan[oy]|aktualizacja|zaktualizowan[oy])\s*:?\s*"
+    r"(\w+\s*,?\s*)?(\d{1,2}\.\d{1,2}(\.\d{2,4})?\s*,?\s*)?(godz\.?\s*)?\d{1,2}[:.]\d{2}\s*[.,;]?$",
+    re.IGNORECASE)
+
+
+def _cell_lines(cell) -> list[str]:
+    """Linie tekstu komórki jak w aplikacji: <br> i bloki (p, div, li) dzielą linie."""
+    from bs4 import NavigableString, Tag
+    parts: list[str] = []
+
+    def walk(node):
+        if isinstance(node, NavigableString):
+            parts.append(str(node).replace("\n", " ").replace("\r", " "))
+        elif isinstance(node, Tag):
+            name = node.name.lower()
+            if name == "br":
+                parts.append("\n")
+                return
+            block = name in ("p", "div", "li")
+            if block:
+                parts.append("\n")
+            for child in node.children:
+                walk(child)
+            if block:
+                parts.append("\n")
+
+    for child in cell.children:
+        walk(child)
+    return [re.sub(r"[ \t]+", " ", line.replace("\u00a0", " ")).strip() for line in "".join(parts).split("\n")]
+
+
+def parse_notices(soup) -> list[dict]:
+    """
+    Informacje szkoły pod datami (np. skrócone lekcje) - te same reguły co ZastepstwaParser.notices
+    w aplikacji. ID = data + skrót treści: zmiana treści to nowe powiadomienie.
+    """
+    import hashlib
+    texts: dict[str, list[str]] = {}
+    for table in soup.find_all("table"):
+        for row in table.find_all("tr"):
+            cells = row.find_all(["td", "th"], recursive=False)
+            if len(cells) != 1:
+                continue
+            m = DATE_RE.search(cells[0].get_text(" ", strip=True))
+            if not m:
+                continue
+            lines = _cell_lines(cells[0])
+            header = next((i for i, line in enumerate(lines) if DATE_RE.search(line)), -1)
+            body = [line for line in lines[header + 1:] if line and not PUBLICATION_RE.match(line)]
+            if body:
+                texts.setdefault(m.group(1), []).extend(body)
+    out = []
+    for date_raw, lines in texts.items():
+        text = "\n".join(lines)
+        day = datetime.strptime(date_raw, "%d.%m.%Y").date()
+        digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+        out.append({"id": f"notice|{day.isoformat()}|{digest}", "date": day.isoformat()})
+    return out
+
+
+def fetch_notices() -> list[dict] | None:
+    """Informacje szkoły z ostatnio pobranej strony zastępstw; None - strony nie pobrano."""
+    return None if _last_subs_soup is None else parse_notices(_last_subs_soup)
+
+
 def fetch_substitutions() -> list[dict]:
+    global _last_subs_soup
     resp = http_get(SUBS_URL)
     archive_page(resp.content)
     html = resp.content.decode("iso-8859-2", errors="replace")
     soup = BeautifulSoup(html, "html.parser")
+    _last_subs_soup = soup
     tables = soup.find_all("table")
     if not tables:
         print("Brak <table> w dokumencie zastępstw", file=sys.stderr)
@@ -356,6 +428,10 @@ def main() -> None:
     # ID -> liczba nieudanych prób wysłania (patrz send_fresh).
     failed_subs = dict(state.get("failed_subs", {}))
     failed_anns = dict(state.get("failed_anns", {}))
+    # Informacje szkoły: brak klucza w stanie = pierwszy przebieg z tą funkcją (tylko zapis).
+    notices_known = "seen_notices" in state
+    seen_notices = set(state.get("seen_notices", []))
+    failed_notices = dict(state.get("failed_notices", {}))
 
     # Każde źródło osobno: awaria jednego nie blokuje drugiego. Jeśli źródło nie odpowiedziało,
     # jego część stanu zostaje bez zmian - inaczej następny udany przebieg uznałby wszystkie
@@ -371,20 +447,25 @@ def main() -> None:
         warn("Strony szkoły nie odpowiadają - spróbuję w następnym przebiegu.")
         return
 
+    notices = fetch_notices() if subs is not None else None
+    from zoneinfo import ZoneInfo
+    today = datetime.now(ZoneInfo("Europe/Warsaw")).date().isoformat()
+    fresh_notices = [n for n in (notices or []) if notices_known and n["id"] not in seen_notices and n["date"] >= today]
     fresh_subs = [s for s in (subs or []) if s["id"] not in seen_subs]
     # To samo ogłoszenie bywa w obu kanałach RSS - jedno powiadomienie na wpis.
     fresh_anns = list({a["id"]: a for a in anns if a["id"] not in seen_anns}.values())
 
-    print(f"Nowych zastępstw: {len(fresh_subs)}, nowych ogłoszeń: {len(fresh_anns)}")
+    print(f"Nowych zastępstw: {len(fresh_subs)}, nowych ogłoszeń: {len(fresh_anns)}, nowych informacji szkoły: {len(fresh_notices)}")
 
     # Pierwsze uruchomienie (pusty state.json) — nie zalewamy pushami całej historii,
     # tylko zapisujemy snapshot. Dokładnie ta sama zasada co initial_sync_done w appce.
     # Liczniki nieudanych prób też się liczą: gdy WSZYSTKIE nowości się nie wysłały, listy
     # "widzianych" mogą być puste - to nie jest pierwsze uruchomienie.
-    is_first_run = (not state.get("seen_subs") and not state.get("seen_anns")
-                    and not failed_subs and not failed_anns)
+    # Informacje szkoły też: strona bez zastępstw (np. w ferie) z samą informacją to nie pierwszy przebieg.
+    is_first_run = (not state.get("seen_subs") and not state.get("seen_anns") and not state.get("seen_notices")
+                    and not failed_subs and not failed_anns and not failed_notices)
 
-    if (fresh_subs or fresh_anns) and not is_first_run:
+    if (fresh_subs or fresh_anns or fresh_notices) and not is_first_run:
         try:
             token, project_id = get_access_token(sa_json)
         except (requests.ConnectionError, requests.Timeout, OSError) as e:
@@ -397,8 +478,12 @@ def main() -> None:
                                 failed_subs, project_id, token)
         retry_anns = send_fresh(fresh_anns, "announcement", f"elektron-anns-{SCHOOL_ID}",
                                 failed_anns, project_id, token)
+        # Informacja szkoły: sygnał do pobrania strony zastępstw (aplikacja 1.0.2+ sama powiadamia;
+        # starsze wersje ignorują nieznany typ).
+        retry_notices = send_fresh(fresh_notices, "notice", f"elektron-subs-{SCHOOL_ID}",
+                                   failed_notices, project_id, token)
     else:
-        retry_subs, retry_anns = set(), set()
+        retry_subs, retry_anns, retry_notices = set(), set(), set()
 
     if subs is not None:
         current_subs = {s["id"] for s in subs}
@@ -410,6 +495,11 @@ def main() -> None:
     state["seen_anns"] = sorted((anns_ids if anns_complete else seen_anns | anns_ids) - retry_anns)
     if anns_complete:
         failed_anns = {k: v for k, v in failed_anns.items() if k in anns_ids}
+    if notices is not None:
+        current_notices = {n["id"] for n in notices}
+        state["seen_notices"] = sorted(current_notices - retry_notices)
+        failed_notices = {k: v for k, v in failed_notices.items() if k in current_notices}
+    state["failed_notices"] = failed_notices
     state["failed_subs"] = failed_subs
     state["failed_anns"] = failed_anns
     save_state(state)

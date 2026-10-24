@@ -22,6 +22,9 @@ serwera i bez kosztów.
 2. Liczy identyfikatory wpisów i porównuje je z listą „widzianych” w `state.json`.
 3. Dla nowych wpisów publikuje wiadomość na temat FCM (`elektron-subs-zse-bydgoszcz` dla
    zastępstw, `elektron-anns-zse-bydgoszcz` dla ogłoszeń). Aplikacja filtruje je po klasie i grupach.
+   Nowa albo zmieniona informacja szkoły pod datą na stronie zastępstw (np. skrócone lekcje) idzie
+   na temat zastępstw jako wiadomość typu `notice` - aplikacja (od 1.0.2) pobiera wtedy stronę i sama
+   decyduje o powiadomieniu; starsze wersje ignorują ten typ.
 4. Zapisuje stan z powrotem do repozytorium (`state.json`).
 
 Aplikacja i tak sama pobiera dane co kilkanaście minut - push skraca tylko czas, po którym
