@@ -194,12 +194,33 @@ def fetch_notices() -> list[dict] | None:
     return None if _last_subs_soup is None else parse_notices(_last_subs_soup)
 
 
+def ensure_complete_page(soup) -> None:
+    """
+    Ta sama kontrola co w aplikacji (ZastepstwaParser.hasRecognizedLayout i hasFooter): ucięta strona bez
+    stopki albo strona awarii z HTTP 200 to SourceUnavailable, stan zostaje bez zmian. Dawniej wpisy spoza
+    uciętej części wypadały z seen_subs i następny przebieg wysyłał je ponownie jako push na wszystkie telefony.
+    """
+    text = soup.get_text(" ", strip=True)
+    if DATE_RE.search(text):
+        vulcan = any("vulcan" in (a.get("href") or "").lower() for a in soup.find_all("a"))
+        if not vulcan and "przygotowano za pomoc" not in text.lower():
+            raise SourceUnavailable("Strona zastępstw bez stopki (ucięta odpowiedź)")
+        return
+    # Pusty eksport w dni wolne jest poprawny; strona awarii z HTTP 200 nie jest.
+    title = soup.title.get_text(strip=True) if soup.title else ""
+    numbered = any(cells and cells[0].get_text(strip=True).isdigit()
+                   for cells in (row.find_all(["td", "th"], recursive=False) for row in soup.find_all("tr")))
+    if title.lower() != "inf. o zast." or numbered:
+        raise SourceUnavailable("Nierozpoznana strona zastępstw")
+
+
 def fetch_substitutions() -> list[dict]:
     global _last_subs_soup
     resp = http_get(SUBS_URL)
     archive_page(resp.content)
     html = resp.content.decode("iso-8859-2", errors="replace")
     soup = BeautifulSoup(html, "html.parser")
+    ensure_complete_page(soup)
     _last_subs_soup = soup
     tables = soup.find_all("table")
     if not tables:
