@@ -1,33 +1,16 @@
 {
   "seen_subs": [
-    "20756|Danuta Gierczak-Pliszka|1|2B|0|22d6d7a9",
-    "20756|Danuta Gierczak-Pliszka|7|4E|0|22d6d7a9",
-    "20756|Danuta Gierczak-Pliszka|8|4E|0|22d6d7a9",
-    "20756|Dariusz Czyżewski|4|2F|1|2e89ebaa",
-    "20756|Dariusz Czyżewski|5|2F|1|2e89ebaa",
-    "20756|Dorota Bartkowska|1|5A|0|6e490576",
-    "20756|Dorota Bartkowska|2|5A|0|aee2611f",
-    "20756|Dorota Bartkowska|3|5J|0|478054c6",
-    "20756|Dorota Bartkowska|4|3D|0|4a7faa12",
-    "20756|Dorota Bartkowska|5|3D|0|4a7faa12",
-    "20756|Dorota Bartkowska|6|4A|0|75c1ac12",
-    "20756|Edyta Łabuńska|2|3H|0|30a79f25",
-    "20756|Edyta Łabuńska|3|3H|0|d5471f38",
-    "20756|Edyta Łabuńska|5|4J|0|d5471f38",
-    "20756|Edyta Łabuńska|6|1I|0|e8a739a9",
-    "20756|Edyta Łabuńska|7|2F|0|2e89ebaa",
-    "20756|Informatyka2 Vacat|4|5D|0|22d6d7a9",
-    "20756|Informatyka2 Vacat|5|5D|0|22d6d7a9",
-    "20756|Informatyka2 Vacat|6|5D|0|22d6d7a9",
-    "20756|Magdalena Kucharska|2|2B|0|358d6380",
-    "20756|Magdalena Kucharska|3|5F|0|202cdc0b",
-    "20756|Magdalena Kucharska|4|5H|0|54d55434",
-    "20756|Magdalena Kucharska|5|2I|0|2e89ebaa",
-    "20756|Magdalena Kucharska|6|1D|0|111a7036",
-    "20756|Patryk Leda|2|1B|0|cb870469",
-    "20756|Patryk Leda|3|1B|0|6a278c0d",
-    "20756|Patryk Leda|5|5A|0|63bd1ede",
-    "20756|Patryk Leda|6|5A|0|63bd1ede"
+    "20759|Anna Grajek|2|2D|0|5583b5ae",
+    "20759|Anna Grajek|3|2F|0|e0bb76d",
+    "20759|Anna Grajek|4|1A|0|18beb01d",
+    "20759|Anna Grajek|5|2B|0|f4475746",
+    "20759|Anna Grajek|6|1D|0|4796cc67",
+    "20759|Anna Grajek|7|1F|0|d92b53f2",
+    "20759|Danuta Gierczak-Pliszka|6|2I|0|422bdb64",
+    "20759|techniczny Vacat tech|1|3D|1|de720c44",
+    "20759|techniczny Vacat tech|2|3D|2|de720c44",
+    "20759|techniczny Vacat tech|3|5I|2|de720c44",
+    "20759|techniczny Vacat tech|4|5I|2|de720c44"
   ],
   "seen_anns": [
     "https://zse.bydgoszcz.pl/baza-firm-w1,800,119201.html",
@@ -65,6 +48,8 @@
   ],
   "failed_subs": {},
   "failed_anns": {},
-  "seen_notices": [],
+  "seen_notices": [
+    "notice|2026-11-02|84ecdd868cfcd947"
+  ],
   "failed_notices": {}
 }
