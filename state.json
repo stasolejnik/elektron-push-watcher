@@ -4,9 +4,14 @@
     "20759|Anna Grajek|3|2F|0|e0bb76d",
     "20759|Anna Grajek|4|1A|0|18beb01d",
     "20759|Anna Grajek|5|2B|0|f4475746",
-    "20759|Anna Grajek|6|1D|0|4796cc67",
+    "20759|Anna Grajek|6|1D|0|30a79f25",
     "20759|Anna Grajek|7|1F|0|d92b53f2",
     "20759|Danuta Gierczak-Pliszka|6|2I|0|422bdb64",
+    "20759|Patryk Leda|3|5A|2|48a86caa",
+    "20759|Patryk Leda|4|5A|2|48a86caa",
+    "20759|Patryk Leda|5|5A|2|48a86caa",
+    "20759|Patryk Leda|6|1B|0|262b982a",
+    "20759|Patryk Leda|7|1B|0|63bd1ede",
     "20759|techniczny Vacat tech|1|3D|1|de720c44",
     "20759|techniczny Vacat tech|2|3D|2|de720c44",
     "20759|techniczny Vacat tech|3|5I|2|de720c44",
@@ -49,7 +54,7 @@
   "failed_subs": {},
   "failed_anns": {},
   "seen_notices": [
-    "notice|2026-11-02|84ecdd868cfcd947"
+    "notice|2026-11-02|04d19a3e52971aa8"
   ],
   "failed_notices": {}
 }
