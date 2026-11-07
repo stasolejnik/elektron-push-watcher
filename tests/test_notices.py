@@ -20,6 +20,12 @@ PAGE = """<html><body><table>
 
 class NoticesTest(unittest.TestCase):
 
+    def test_short_publication_line_is_not_a_notice(self):
+        # Prawdziwa linia z 3.11.2026 - dawniej push "notice" i powiadomienie "Informacja szkoły · jutro".
+        self.assertTrue(watch.PUBLICATION_RE.match("Publikacja dn. 03.11.26 godz. 17:22"))
+        page = PAGE.replace("Publikacja godz. 16:10", "Publikacja dn. 03.11.26 godz. 17:22")
+        self.assertEqual(["2099-10-26"], [n["date"] for n in watch.parse_notices(BeautifulSoup(page, "html.parser"))])
+
     def test_parse_skips_publication_lines_and_days_without_text(self):
         notices = watch.parse_notices(BeautifulSoup(PAGE, "html.parser"))
         self.assertEqual(["2099-10-26"], [n["date"] for n in notices])

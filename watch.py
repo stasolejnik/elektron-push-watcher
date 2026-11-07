@@ -130,7 +130,7 @@ _last_subs_soup = None
 # Jak ZastepstwaParser.isPublicationLine w aplikacji: cała linia to znacznik publikacji, nie treść.
 PUBLICATION_RE = re.compile(
     r"^(publikacja|opublikowan[oy]|aktualizacja|zaktualizowan[oy])\s*:?\s*"
-    r"(\w+\s*,?\s*)?(\d{1,2}\.\d{1,2}(\.\d{2,4})?\s*,?\s*)?(godz\.?\s*)?\d{1,2}[:.]\d{2}\s*[.,;]?$",
+    r"(\w+\.?\s*,?\s*){0,2}(\d{1,2}\.\d{1,2}(\.\d{2,4})?\s*,?\s*)?(godz\.?\s*)?\d{1,2}[:.]\d{2}\s*[.,;]?$",
     re.IGNORECASE)
 
 
