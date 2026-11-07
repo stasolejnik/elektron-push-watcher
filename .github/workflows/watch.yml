@@ -25,11 +25,11 @@ jobs:
       # ref: main - NAJNOWSZY stan gałęzi w chwili startu. Bez tego przebieg czekający
       # w kolejce dostawał commit z chwili wywołania, czyli state.json sprzed poprzedniego
       # przebiegu -> te same pushe wysłane drugi raz i odrzucony zapis stanu.
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: main
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
