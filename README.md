@@ -91,4 +91,4 @@ odbywa się w aplikacji, na telefonie.
 
 ## Kontakt
 
-kontakt.elektron@pm.me
+elektron@tuta.com
