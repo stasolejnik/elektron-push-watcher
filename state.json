@@ -1,13 +1,17 @@
 {
   "seen_subs": [
-    "20766|Arleta Wrzesień|4|2H|2|2e89ebaa",
-    "20766|Danuta Gierczak-Pliszka|6|2I|0|422bdb64",
-    "20766|Kamila Gałek-Stachura|5|2H|0|2e89ebaa",
-    "20766|Tomasz Janka|4|2H|1|2e89ebaa",
-    "20766|techniczny Vacat tech|1|3D|1|de720c44",
-    "20766|techniczny Vacat tech|2|3D|2|de720c44",
-    "20766|techniczny Vacat tech|3|5I|2|de720c44",
-    "20766|techniczny Vacat tech|4|5I|2|de720c44"
+    "20767|Danuta Gierczak-Pliszka|4|5H|0|e88bc541",
+    "20767|Danuta Gierczak-Pliszka|5|5H|0|e88bc541",
+    "20767|Danuta Gierczak-Pliszka|8|4E|0|c8fb6d68",
+    "20767|Informatyka1 Vacat|6|1A|0|e88bc541",
+    "20767|Piotr Kobus|0|2F|1|48a86caa",
+    "20767|Piotr Kobus|1|2F|1|48a86caa",
+    "20767|Piotr Kobus|2|2A|1|30a79f25",
+    "20767|Piotr Kobus|3|2I|0|77f43965",
+    "20767|Stanisław Wilczyński|0|2B|1|1fb772cf",
+    "20767|Stanisław Wilczyński|1|2B|1|1fb772cf",
+    "20767|Stanisław Wilczyński|2|2B|1|1fb772cf",
+    "20767|Stanisław Wilczyński|3|2B|1|1fb772cf"
   ],
   "seen_anns": [
     "https://zse.bydgoszcz.pl/baza-firm-w1,800,119201.html",
@@ -46,7 +50,7 @@
   "failed_subs": {},
   "failed_anns": {},
   "seen_notices": [
-    "notice|2026-11-09|b36b2dab5b39fa07"
+    "notice|2026-11-10|3aefded243399f4e"
   ],
   "failed_notices": {}
 }
