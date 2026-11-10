@@ -39,6 +39,17 @@ class SubstitutionIdTest(unittest.TestCase):
         self.assertEqual(32, len(expected))
         self.assertEqual(expected, ids)
 
+    def test_empty_description_is_still_a_substitution(self):
+        # Prawdziwy wiersz z archiwum: "4 B(1) -" z zastępcą i uwagą "złączenie grup".
+        html = ("<html><body><table><tr><td colspan=4>Zastępstwa w dniu 05.11.2099 czwartek</td></tr>"
+                "<tr><td colspan=4>Jan Kowalski</td></tr>"
+                "<tr><td>lekcja</td><td>opis</td><td>zastępca</td><td>uwagi</td></tr>"
+                "<tr><td>2</td><td>4 B(1) -</td><td>Anna Nowak</td><td>złączenie grup</td></tr>"
+                "</table><a href='http://www.vulcan.pl'>VULCAN</a></body></html>")
+        watch.http_get = lambda url: types.SimpleNamespace(content=html.encode("iso-8859-2"))
+        subs = watch.fetch_substitutions()
+        self.assertEqual([("4B", 1, "")], [(s["classShortName"], s["groupNumber"], s["roomOrInfo"]) for s in subs])
+
     def test_java_hashcode(self):
         # Wartości z Kotlina/Javy: "".hashCode() == 0, "abc".hashCode() == 96354.
         self.assertEqual(0, watch.java_string_hashcode(""))

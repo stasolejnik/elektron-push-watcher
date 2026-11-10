@@ -78,7 +78,8 @@ def warn(msg: str) -> None:
 
 
 DATE_RE = re.compile(r"Zastępstwa w dniu\s+(\d{2}\.\d{2}\.\d{4})")
-DESC_RE = re.compile(r"^(\d+)\s*([A-Z])(?:\((\d+)\))?\s*-\s*(.+)$")
+# Opis może być pusty ("4 B(1) -" przy złączeniu grup) - jak w aplikacji.
+DESC_RE = re.compile(r"^(\d+)\s*([A-Z])(?:\((\d+)\))?\s*-\s*(.*)$")
 
 
 def java_string_hashcode(s: str) -> int:
@@ -132,6 +133,33 @@ PUBLICATION_RE = re.compile(
     r"^(publikacja|opublikowan[oy]|aktualizacja|zaktualizowan[oy])\s*:?\s*"
     r"(\w+\.?\s*,?\s*){0,2}(\d{1,2}\.\d{1,2}(\.\d{2,4})?\s*,?\s*)?(godz\.?\s*)?\d{1,2}[:.]\d{2}\s*[.,;]?$",
     re.IGNORECASE)
+_KEYWORD_RE = re.compile(r"^[^\W\d_]{8,}")
+_PUBLICATION_KEYWORDS = ("publikacja", "opublikowano", "opublikowany", "aktualizacja", "zaktualizowano", "zaktualizowany")
+
+
+def _edit_distance(a: str, b: str) -> int:
+    """Odległość Damerau-Levenshteina (zamiana sąsiednich liter to jedna zmiana)."""
+    d = [[i if j == 0 else j if i == 0 else 0 for j in range(len(b) + 1)] for i in range(len(a) + 1)]
+    for i in range(1, len(a) + 1):
+        for j in range(1, len(b) + 1):
+            cost = 0 if a[i - 1] == b[j - 1] else 1
+            d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost)
+            if i > 1 and j > 1 and a[i - 1] == b[j - 2] and a[i - 2] == b[j - 1]:
+                d[i][j] = min(d[i][j], d[i - 2][j - 2] + 1)
+    return d[len(a)][len(b)]
+
+
+def is_publication_line(line: str) -> bool:
+    """Jak ZastepstwaParser.isPublicationLine: także z literówką w słowie kluczowym ("Atkualizacja godz. 8:00")."""
+    line = line.strip()
+    if PUBLICATION_RE.match(line):
+        return True
+    m = _KEYWORD_RE.match(line)
+    if not m:
+        return False
+    first = m.group(0)
+    fixed = next((k for k in _PUBLICATION_KEYWORDS if 1 <= _edit_distance(first.lower(), k) <= 2), None)
+    return fixed is not None and PUBLICATION_RE.match(fixed + line[len(first):]) is not None
 
 
 def _cell_lines(cell) -> list[str]:
@@ -177,7 +205,7 @@ def parse_notices(soup) -> list[dict]:
                 continue
             lines = _cell_lines(cells[0])
             header = next((i for i, line in enumerate(lines) if DATE_RE.search(line)), -1)
-            body = [line for line in lines[header + 1:] if line and not PUBLICATION_RE.match(line)]
+            body = [line for line in lines[header + 1:] if line and not is_publication_line(line)]
             if body:
                 texts.setdefault(m.group(1), []).extend(body)
     out = []
