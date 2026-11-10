@@ -7,7 +7,7 @@
     "20767|Piotr Kobus|0|2F|1|48a86caa",
     "20767|Piotr Kobus|1|2F|1|48a86caa",
     "20767|Piotr Kobus|2|2A|1|30a79f25",
-    "20767|Piotr Kobus|3|2I|0|77f43965",
+    "20767|Piotr Kobus|3|2I|0|aca7450c",
     "20767|Stanisław Wilczyński|0|2B|1|1fb772cf",
     "20767|Stanisław Wilczyński|1|2B|1|1fb772cf",
     "20767|Stanisław Wilczyński|2|2B|1|1fb772cf",
@@ -50,7 +50,7 @@
   "failed_subs": {},
   "failed_anns": {},
   "seen_notices": [
-    "notice|2026-11-10|3aefded243399f4e"
+    "notice|2026-11-10|480250c716d722b1"
   ],
   "failed_notices": {}
 }
