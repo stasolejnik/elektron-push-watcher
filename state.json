@@ -1,17 +1,19 @@
 {
   "seen_subs": [
-    "20767|Danuta Gierczak-Pliszka|4|5H|0|e88bc541",
-    "20767|Danuta Gierczak-Pliszka|5|5H|0|e88bc541",
-    "20767|Danuta Gierczak-Pliszka|8|4E|0|c8fb6d68",
-    "20767|Informatyka1 Vacat|6|1A|0|e88bc541",
-    "20767|Piotr Kobus|0|2F|1|48a86caa",
-    "20767|Piotr Kobus|1|2F|1|48a86caa",
-    "20767|Piotr Kobus|2|2A|1|30a79f25",
-    "20767|Piotr Kobus|3|2I|0|aca7450c",
-    "20767|Stanisław Wilczyński|0|2B|1|1fb772cf",
-    "20767|Stanisław Wilczyński|1|2B|1|1fb772cf",
-    "20767|Stanisław Wilczyński|2|2B|1|1fb772cf",
-    "20767|Stanisław Wilczyński|3|2B|1|1fb772cf"
+    "20769|Agnieszka Sumicka|8|4I|0|d1309842",
+    "20769|Danuta Gierczak-Pliszka|2|5H|0|e88bc541",
+    "20769|Danuta Gierczak-Pliszka|3|5H|0|e88bc541",
+    "20769|Danuta Gierczak-Pliszka|5|2I|0|e4cdbc40",
+    "20769|Danuta Gierczak-Pliszka|6|2I|0|e4cdbc40",
+    "20769|Informatyka1 Vacat|4|1A|0|e88bc541",
+    "20769|Informatyka1 Vacat|5|1A|0|e88bc541",
+    "20769|Katarzyna Grabska|4|5D|0|30a79f25",
+    "20769|Radosław Śmidoda|2|2I|0|1af55b4c",
+    "20769|Radosław Śmidoda|5|3H|2|99e4d166",
+    "20769|Radosław Śmidoda|6|3H|2|30a79f25",
+    "20769|Radosław Śmidoda|7|3H|2|c129c40d",
+    "20769|Radosław Śmidoda|8|4J|0|63bd1ede",
+    "20769|Radosław Śmidoda|9|2F|0|63bd1ede"
   ],
   "seen_anns": [
     "https://zse.bydgoszcz.pl/baza-firm-w1,800,119201.html",
@@ -49,8 +51,6 @@
   ],
   "failed_subs": {},
   "failed_anns": {},
-  "seen_notices": [
-    "notice|2026-11-10|3aefded243399f4e"
-  ],
+  "seen_notices": [],
   "failed_notices": {}
 }
