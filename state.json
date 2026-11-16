@@ -1,5 +1,8 @@
 {
   "seen_subs": [
+    "20774|Adam Sieracki|6|1I|1|63bd1ede",
+    "20774|Adam Sieracki|7|1I|1|63bd1ede",
+    "20774|Adam Sieracki|8|2A|2|63bd1ede",
     "20774|Danuta Gierczak-Pliszka|4|5H|0|e88bc541",
     "20774|Danuta Gierczak-Pliszka|5|5H|0|e88bc541",
     "20774|Danuta Gierczak-Pliszka|8|4E|0|c8fb6d68",
@@ -68,7 +71,7 @@
   "failed_subs": {},
   "failed_anns": {},
   "seen_notices": [
-    "notice|2026-11-17|8ede001d0c8e4ea4"
+    "notice|2026-11-17|6b87268ec8a9f414"
   ],
   "failed_notices": {}
 }
