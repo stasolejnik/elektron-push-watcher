@@ -3,6 +3,12 @@
     "20774|Adam Sieracki|6|1I|1|63bd1ede",
     "20774|Adam Sieracki|7|1I|1|63bd1ede",
     "20774|Adam Sieracki|8|2A|2|63bd1ede",
+    "20774|Arleta Wrzesień|3|4F|1|30a79f25",
+    "20774|Arleta Wrzesień|4|4F|1|30a79f25",
+    "20774|Arleta Wrzesień|5|4H|1|30a79f25",
+    "20774|Arleta Wrzesień|6|4H|1|b41ed10e",
+    "20774|Arleta Wrzesień|7|5F|2|63bd1ede",
+    "20774|Arleta Wrzesień|8|5F|2|63bd1ede",
     "20774|Danuta Gierczak-Pliszka|4|5H|0|e88bc541",
     "20774|Danuta Gierczak-Pliszka|5|5H|0|e88bc541",
     "20774|Danuta Gierczak-Pliszka|8|4E|0|c8fb6d68",
@@ -71,7 +77,7 @@
   "failed_subs": {},
   "failed_anns": {},
   "seen_notices": [
-    "notice|2026-11-17|6b87268ec8a9f414"
+    "notice|2026-11-17|7cc05452e5b6420e"
   ],
   "failed_notices": {}
 }
