@@ -22,6 +22,7 @@
     "20774|Rafał Borowczyk|1|1A|1|48a86caa",
     "20774|Rafał Borowczyk|2|5J|2|2e89ebaa",
     "20774|Rafał Borowczyk|3|5J|2|2e89ebaa",
+    "20774|Rafał Borowczyk|5|4A|1|30a79f25",
     "20774|Stanisław Wilczyński|0|2B|1|1fb772cf",
     "20774|Stanisław Wilczyński|1|2B|1|1fb772cf",
     "20774|Stanisław Wilczyński|2|2B|1|1fb772cf",
@@ -67,7 +68,7 @@
   "failed_subs": {},
   "failed_anns": {},
   "seen_notices": [
-    "notice|2026-11-17|67f361233b88fe05"
+    "notice|2026-11-17|8ede001d0c8e4ea4"
   ],
   "failed_notices": {}
 }
