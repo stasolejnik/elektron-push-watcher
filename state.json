@@ -16,6 +16,9 @@
     "20774|Dariusz Czyżewski|1|4E|1|48a86caa",
     "20774|Dariusz Czyżewski|2|2D|1|555c72db",
     "20774|Informatyka1 Vacat|6|1A|0|e88bc541",
+    "20774|Izabela Kowalska|6|1B|2|30a79f25",
+    "20774|Izabela Kowalska|7|4A|2|63bd1ede",
+    "20774|Izabela Kowalska|8|3D|1|30a79f25",
     "20774|Magdalena Wojtecka-Ratajczak|2|5J|1|2e89ebaa",
     "20774|Magdalena Wojtecka-Ratajczak|3|5J|1|2e89ebaa",
     "20774|Magdalena Wojtecka-Ratajczak|4|2H|2|64ec221",
@@ -77,7 +80,7 @@
   "failed_subs": {},
   "failed_anns": {},
   "seen_notices": [
-    "notice|2026-11-17|7cc05452e5b6420e"
+    "notice|2026-11-17|a6551ac14fc2e59a"
   ],
   "failed_notices": {}
 }
