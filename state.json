@@ -83,6 +83,8 @@
   ],
   "failed_subs": {},
   "failed_anns": {},
-  "seen_notices": [],
+  "seen_notices": [
+    "notice|2026-11-18|6ebe3a55786705ca"
+  ],
   "failed_notices": {}
 }
