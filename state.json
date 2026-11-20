@@ -50,7 +50,7 @@
     "20777|Rafał Korytek|1|4F|0|48a86caa",
     "20777|Rafał Korytek|2|4H|0|e898c10d",
     "20777|Rafał Korytek|3|4H|0|e9aaaa14",
-    "20777|Rafał Korytek|4|4J|0|6b4b0923",
+    "20777|Rafał Korytek|4|4J|0|65f96c5",
     "20777|Tomasz Poćwiardowski|2|1F|1|48a86caa",
     "20777|techniczny Vacat tech|8|3A|1|de720c44"
   ],
@@ -90,6 +90,8 @@
   ],
   "failed_subs": {},
   "failed_anns": {},
-  "seen_notices": [],
+  "seen_notices": [
+    "notice|2026-11-20|6c27474b077273cc"
+  ],
   "failed_notices": {}
 }
