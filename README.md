@@ -55,14 +55,16 @@ nie wyłączył harmonogramu po 60 dniach bez aktywności.
 ## Archiwum stron zastępstw
 
 Przy każdej zmianie strony zastępstw przez szkołę watcher zapisuje jej kopię w
-`archiwum/zastepstwa/` (oryginalne bajty, ISO-8859-2). Służy do testowania parsera aplikacji na
-prawdziwych stronach z wielu dni.
+`archiwum/zastepstwa/` (oryginalne bajty, ISO-8859-2). Służy do testowania parsera aplikacji i
+watchera na prawdziwych stronach z wielu dni - np. przed podniesieniem wersji bibliotek warto
+porównać, czy na wszystkich stronach z archiwum wychodzą te same identyfikatory. Archiwum rośnie
+o kilkanaście-kilkadziesiąt kB na zmianę strony (ok. 1,3 MB po dwóch miesiącach).
 
 ## Konfiguracja
 
 Do wysyłania wymagany jest sekret repozytorium `FCM_SERVICE_ACCOUNT_JSON` - klucz konta usługi
-Firebase. Krok po kroku: [PORADNIK_PUSH.md](https://github.com/stasolejnik/elektron/blob/main/PORADNIK_PUSH.md)
-w repozytorium aplikacji.
+Firebase. Krok po kroku: [Powiadomienia push](https://github.com/stasolejnik/elektron/blob/main/DEWELOPER.md#powiadomienia-push)
+w przewodniku dla deweloperów aplikacji. Klucza nie commituj - `.gitignore` pomija typowe nazwy jego plików.
 
 ## Testy
 
@@ -70,6 +72,9 @@ w repozytorium aplikacji.
 pip install -r requirements.txt
 python -m unittest discover -s tests
 ```
+
+Workflow używa Pythona 3.12 - lokalnie też najlepiej 3.12 albo nowszy (dla nowszego Pythona
+potrzebne są aktualne wersje bibliotek z `requirements.txt`, które mają gotowe pakiety).
 
 Testy działają bez sieci (wysyłka FCM jest podmieniana). Nie są częścią workflow uruchamianego
 co 5 minut, żeby błąd testu nie zatrzymał wysyłki powiadomień.

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-eLektron push-watcher — funkcja #7.
+eLektron push watcher.
 
-Uruchamiane cyklicznie przez GitHub Actions (darmowe, bez limitu na publicznym repo).
+Uruchamiany cyklicznie przez GitHub Actions (darmowe, bez limitu na publicznym repo).
 Sprawdza zastępstwa i ogłoszenia ZSE Bydgoszcz, porównuje z poprzednim stanem
 (state.json, commitowany z powrotem do repo przez workflow) i dla nowości publikuje
 na temat FCM — appka odbiera to w ElektronFirebaseMessagingService.
@@ -31,7 +31,7 @@ RSS_URLS = [
     ("rss_latest", "https://zse.bydgoszcz.pl/rsslatest.xml"),
 ]
 STATE_PATH = Path(__file__).parent / "state.json"
-USER_AGENT = "eLektron-push-watcher/0.2 (+https://github.com/stasolejnik/elektron-push-watcher)"
+USER_AGENT = "eLektron-push-watcher/0.3 (+https://github.com/stasolejnik/elektron-push-watcher)"
 
 # (połączenie, odczyt) w sekundach. Serwer szkoły bywa chwilowo nieosiągalny z maszyn
 # GitHuba - lepiej szybko ponowić niż czekać, bo przebieg i tak powtórzy się za 5 min.
@@ -468,7 +468,7 @@ def get_access_token(service_account_json: str) -> tuple[str, str]:
 def main() -> None:
     sa_json = os.environ.get("FCM_SERVICE_ACCOUNT_JSON")
     if not sa_json:
-        print("Brak sekretu FCM_SERVICE_ACCOUNT_JSON — patrz PORADNIK_PUSH.md", file=sys.stderr)
+        print("Brak sekretu FCM_SERVICE_ACCOUNT_JSON - patrz README (Konfiguracja)", file=sys.stderr)
         sys.exit(1)
 
     state = load_state()
