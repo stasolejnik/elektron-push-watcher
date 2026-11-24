@@ -9,6 +9,15 @@
     "20782|Danuta Gierczak-Pliszka|3|5H|0|30a79f25",
     "20782|Kamila Gałek-Stachura|6|4H|1|63bd1ede",
     "20782|Kamila Gałek-Stachura|7|4H|1|63bd1ede",
+    "20782|Radosław Śmidoda|0|2H|2|48a86caa",
+    "20782|Radosław Śmidoda|1|2H|2|48a86caa",
+    "20782|Radosław Śmidoda|2|2H|2|48a86caa",
+    "20782|Radosław Śmidoda|3|2H|1|ce952dde",
+    "20782|Radosław Śmidoda|4|2H|1|1837f0ed",
+    "20782|Radosław Śmidoda|5|2H|1|9ff05a22",
+    "20782|Radosław Śmidoda|6|3H|1|63bd1ede",
+    "20782|Radosław Śmidoda|7|3H|1|63bd1ede",
+    "20782|Radosław Śmidoda|8|3H|1|63bd1ede",
     "20782|Sławomira Sędalska|7|2B|2|6b61cda4",
     "20782|Sławomira Sędalska|8|5B|1|63bd1ede",
     "20782|techniczny Vacat tech|0|5I|1|de720c44",
@@ -51,7 +60,7 @@
   "failed_subs": {},
   "failed_anns": {},
   "seen_notices": [
-    "notice|2026-11-25|45cdd3d497e4f462"
+    "notice|2026-11-25|4d4e103cd1d2d564"
   ],
   "failed_notices": {}
 }
