@@ -1,23 +1,18 @@
 {
   "seen_subs": [
-    "20781|Adam Sieracki|6|1I|1|63bd1ede",
-    "20781|Adam Sieracki|7|1I|1|63bd1ede",
-    "20781|Adam Sieracki|8|2A|2|63bd1ede",
-    "20781|Agnieszka Dembczyńska|2|1F|0|46275d4e",
-    "20781|Danuta Gierczak-Pliszka|4|5H|0|3ae18984",
-    "20781|Danuta Gierczak-Pliszka|5|5H|0|bb7de8a1",
-    "20781|Danuta Gierczak-Pliszka|8|4E|0|c8fb6d68",
-    "20781|Informatyka1 Vacat|6|1A|0|2a1cb64b",
-    "20781|Kamila Gałek-Stachura|3|2H|1|aca7450c",
-    "20781|Kamila Gałek-Stachura|5|5D|1|52fca6de",
-    "20781|Kamila Gałek-Stachura|6|5D|1|c9b9bfa4",
-    "20781|Kamila Gałek-Stachura|7|5D|1|63bd1ede",
-    "20781|Kamila Gałek-Stachura|8|1B|2|f29401e9",
-    "20781|Radosław Śmidoda|0|1H|1|48a86caa",
-    "20781|Radosław Śmidoda|1|1H|1|48a86caa",
-    "20781|Radosław Śmidoda|2|1H|2|2e89ebaa",
-    "20781|Radosław Śmidoda|3|1H|2|2e89ebaa",
-    "20781|techniczny Vacat tech|9|3A|2|de720c44"
+    "20782|Adam Sieracki|2|1D|2|c52ead8f",
+    "20782|Adam Sieracki|3|1D|2|30a79f25",
+    "20782|Anna Gałdecka-Wysk|3|4F|0|9fde3407",
+    "20782|Anna Gałdecka-Wysk|4|4H|0|30a79f25",
+    "20782|Danuta Gierczak-Pliszka|0|2B|0|c8fb6d68",
+    "20782|Danuta Gierczak-Pliszka|1|2B|0|c8fb6d68",
+    "20782|Danuta Gierczak-Pliszka|3|5H|0|30a79f25",
+    "20782|Kamila Gałek-Stachura|6|4H|1|63bd1ede",
+    "20782|Kamila Gałek-Stachura|7|4H|1|63bd1ede",
+    "20782|Sławomira Sędalska|7|2B|2|6b61cda4",
+    "20782|Sławomira Sędalska|8|5B|1|63bd1ede",
+    "20782|techniczny Vacat tech|0|5I|1|de720c44",
+    "20782|techniczny Vacat tech|1|5I|1|de720c44"
   ],
   "seen_anns": [
     "https://zse.bydgoszcz.pl/baza-firm-w1,800,119201.html",
@@ -55,6 +50,8 @@
   ],
   "failed_subs": {},
   "failed_anns": {},
-  "seen_notices": [],
+  "seen_notices": [
+    "notice|2026-11-25|45cdd3d497e4f462"
+  ],
   "failed_notices": {}
 }
