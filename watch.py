@@ -80,6 +80,9 @@ def warn(msg: str) -> None:
 DATE_RE = re.compile(r"Zastępstwa w dniu\s+(\d{2}\.\d{2}\.\d{4})")
 # Opis może być pusty ("4 B(1) -" przy złączeniu grup) - jak w aplikacji.
 DESC_RE = re.compile(r"^(\d+)\s*([A-Z])(?:\((\d+)\))?\s*-\s*(.*)$")
+# Wpis bez klasy (zajęcia łączone), np. "Wychowanie fizyczne - Zajęcia Świetlicowe": przedmiot zamiast
+# klasy, zaczyna się od litery - jak CLASSLESS_RE w aplikacji (ZastepstwaParser).
+CLASSLESS_RE = re.compile(r"^([^\W\d_][^-]*?)\s+-\s+(\S.*)$")
 
 
 def java_string_hashcode(s: str) -> int:
@@ -305,11 +308,20 @@ def fetch_substitutions() -> list[dict]:
             continue
 
         m = DESC_RE.match(texts[1])
-        if not m:
+        joined = CLASSLESS_RE.match(texts[1]) if not m else None
+        if joined:
+            # Bez klasy: push z pustą klasą i ID jak w aplikacji dla wpisu bez przypisanej klasy.
+            # Aplikacja (od 1.0.5) sprawdza wtedy zastępstwa i sama przypisuje klasę z planu albo
+            # pokazuje wpis w części "Bez przypisanej klasy"; starsze wersje ignorują pustą klasę.
+            class_short = ""
+            group = None
+            room_or_info = joined.group(2).strip()
+        elif not m:
             continue
-        class_short = f"{m.group(1)}{m.group(2)}"
-        group = int(m.group(3)) if m.group(3) else None
-        room_or_info = m.group(4).strip()
+        else:
+            class_short = f"{m.group(1)}{m.group(2)}"
+            group = int(m.group(3)) if m.group(3) else None
+            room_or_info = m.group(4).strip()
         substitute_teacher = texts[2] or None
         notes = texts[3] or None
 
@@ -326,6 +338,8 @@ def fetch_substitutions() -> list[dict]:
             "substituteTeacher": substitute_teacher,
             "notes": notes,
             "originalTeacher": current_teacher,
+            # Jawny znacznik wpisu bez klasy - pusta wartość w danych FCM nie musi dotrzeć.
+            **({"unassigned": "1"} if not class_short else {}),
         })
 
     print(f"Sparsowano {len(out)} zastępstw")

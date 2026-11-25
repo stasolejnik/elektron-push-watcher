@@ -35,7 +35,8 @@ class SubstitutionIdTest(unittest.TestCase):
 
     def test_ids_match_app(self):
         expected = [l for l in (FIXTURES / "zastepstwa-2026-10-01.ids").read_text(encoding="utf-8").splitlines() if l.strip()]
-        ids = [s["id"] for s in watch.fetch_substitutions()]
+        # Wpisy z klasą - te same, co aplikacja zapisuje bezpośrednio (wpisy bez klasy osobno niżej).
+        ids = [s["id"] for s in watch.fetch_substitutions() if s["classShortName"]]
         self.assertEqual(32, len(expected))
         self.assertEqual(expected, ids)
 
@@ -58,3 +59,16 @@ class SubstitutionIdTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ClasslessTest(unittest.TestCase):
+
+    def test_classless_entry_matches_app_unassigned_id(self):
+        m = watch.CLASSLESS_RE.match("Wychowanie fizyczne - Zajęcia Świetlicowe")
+        self.assertEqual(("Wychowanie fizyczne", "Zajęcia Świetlicowe"), m.groups())
+        self.assertIsNone(watch.CLASSLESS_RE.match("4 H - Zajęcia Świetlicowe"))
+        # Aplikacja (SubstitutionMapper): klasa "", grupa 0, skrót sali/informacji i zastępcy.
+        from datetime import date
+        sid = watch.substitution_id(date(2026, 11, 25), "Sławomira Nowak", 4, "", None, "Zajęcia Świetlicowe", None)
+        self.assertTrue(sid.startswith(f"{watch.epoch_day(date(2026, 11, 25))}|Sławomira Nowak|4||0|"))
+

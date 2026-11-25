@@ -20,7 +20,10 @@ def fetch(content: bytes) -> list[dict]:
 class PageCheckTest(unittest.TestCase):
 
     def test_full_page_passes(self):
-        self.assertEqual(32, len(fetch(FIXTURE.read_bytes())))
+        subs = fetch(FIXTURE.read_bytes())
+        # 32 wpisy z klasą i 2 zajęcia łączone bez klasy (push z pustą klasą).
+        self.assertEqual(32, sum(1 for s in subs if s["classShortName"]))
+        self.assertEqual(2, sum(1 for s in subs if not s["classShortName"]))
 
     def test_truncated_page_is_rejected(self):
         page = FIXTURE.read_bytes()

@@ -25,6 +25,10 @@ serwera i bez kosztów.
    Nowa albo zmieniona informacja szkoły pod datą na stronie zastępstw (np. skrócone lekcje) idzie
    na temat zastępstw jako wiadomość typu `notice` - aplikacja (od 1.0.2) pobiera wtedy stronę i sama
    decyduje o powiadomieniu; starsze wersje ignorują ten typ.
+   Zajęcia łączone, przy których szkoła podaje przedmiot zamiast klasy (np. „Wychowanie fizyczne -
+   Zajęcia Świetlicowe”), idą z pustą klasą i polem `unassigned` = `1`. Aplikacja (od 1.0.5) pobiera
+   wtedy stronę i sama przypisuje klasę z planu albo pokazuje wpis jako „bez przypisanej klasy”;
+   starsze wersje ignorują wpis bez klasy.
 4. Zapisuje stan z powrotem do repozytorium (`state.json`).
 
 Aplikacja i tak sama pobiera dane co kilkanaście minut - push skraca tylko czas, po którym
